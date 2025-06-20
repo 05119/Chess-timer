@@ -98,83 +98,113 @@
   </div>
 
   <script>
-    let totalTime = 600;
-    let time1 = totalTime;
-    let time2 = totalTime;
-    let activePlayer = 1;
-    let interval;
-    let isRunning = false;
+  let totalTime = 600;
+  let time1 = totalTime;
+  let time2 = totalTime;
+  let activePlayer = null;
+  let interval;
+  let isRunning = false;
 
-    const bar1 = document.getElementById("bar1");
-    const bar2 = document.getElementById("bar2");
-    const player1 = document.getElementById("player1");
-    const player2 = document.getElementById("player2");
-    const time1Text = document.getElementById("time1Text");
-    const time2Text = document.getElementById("time2Text");
-    const timeInput = document.getElementById("timeInput");
+  const bar1 = document.getElementById("bar1");
+  const bar2 = document.getElementById("bar2");
+  const player1 = document.getElementById("player1");
+  const player2 = document.getElementById("player2");
+  const time1Text = document.getElementById("time1Text");
+  const time2Text = document.getElementById("time2Text");
+  const timeInput = document.getElementById("timeInput");
 
-    function formatTime(seconds) {
-      const m = Math.floor(seconds / 60);
-      const s = seconds % 60;
-      return `${m}:${s.toString().padStart(2, '0')}`;
-    }
+  function formatTime(seconds) {
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+    return `${m}:${s.toString().padStart(2, '0')}`;
+  }
 
-    function updateBars() {
-      bar1.style.width = `${(time1 / totalTime) * 100}%`;
-      bar2.style.width = `${(time2 / totalTime) * 100}%`;
-      time1Text.textContent = formatTime(time1);
-      time2Text.textContent = formatTime(time2);
-    }
+  function updateBars() {
+    bar1.style.width = `${(time1 / totalTime) * 100}%`;
+    bar2.style.width = `${(time2 / totalTime) * 100}%`;
+    time1Text.textContent = formatTime(time1);
+    time2Text.textContent = formatTime(time2);
+  }
 
-    function handleSwitch() {
-      if (!isRunning) return;
-      if (activePlayer === 1) {
-        activePlayer = 2;
-        player1.classList.remove("active");
-        player2.classList.add("active");
-      } else {
-        activePlayer = 1;
-        player2.classList.remove("active");
-        player1.classList.add("active");
+  function handleSwitch(clickedPlayer = null) {
+    if (!isRunning) {
+      // First tap, initialize the active player
+      if (clickedPlayer === 1 || clickedPlayer === 2) {
+        activePlayer = clickedPlayer;
+        isRunning = true;
+        startTimer();
+        setActiveClass();
       }
+      return;
     }
 
-    function startTimer() {
-      if (interval) return;
-      isRunning = true;
-      interval = setInterval(() => {
-        if (activePlayer === 1) {
-          if (time1 > 0) time1--;
-        } else {
-          if (time2 > 0) time2--;
-        }
-        updateBars();
-
-        if (time1 === 0 || time2 === 0) {
-          clearInterval(interval);
-          interval = null;
-          isRunning = false;
-          const loser = time1 === 0 ? "Jinku" : "Bhargav";
-          alert(`Time's up ${loser}!`);
-        }
-      }, 1000);
-    }
-
-    function resetTimer() {
-      clearInterval(interval);
-      interval = null;
-      isRunning = false;
-      totalTime = parseInt(timeInput.value || "5") * 60;
-      time1 = totalTime;
-      time2 = totalTime;
+    if (activePlayer === 1) {
+      activePlayer = 2;
+    } else {
       activePlayer = 1;
-      player1.classList.add("active");
-      player2.classList.remove("active");
-      updateBars();
     }
+    setActiveClass();
+  }
 
+  function setActiveClass() {
+    player1.classList.toggle("active", activePlayer === 1);
+    player2.classList.toggle("active", activePlayer === 2);
+  }
+
+  function startTimer() {
+    if (interval) return;
+    interval = setInterval(() => {
+      if (activePlayer === 1 && time1 > 0) {
+        time1--;
+      } else if (activePlayer === 2 && time2 > 0) {
+        time2--;
+      }
+
+      updateBars();
+
+      if (time1 === 0 || time2 === 0) {
+        clearInterval(interval);
+        interval = null;
+        isRunning = false;
+        const loser = time1 === 0 ? "Jinku" : "Bhargav";
+        const message = `Time's up ${loser}!`;
+        const utterance = new SpeechSynthesisUtterance(message);
+        speechSynthesis.speak(utterance);
+        alert(message);
+      }
+    }, 1000);
+  }
+
+  function resetTimer() {
+    clearInterval(interval);
+    interval = null;
+    isRunning = false;
+    activePlayer = null;
+    totalTime = parseInt(timeInput.value || "5") * 60;
+    time1 = totalTime;
+    time2 = totalTime;
+    player1.classList.remove("active");
+    player2.classList.remove("active");
     updateBars();
-  </script>
+  }
+
+  player1.addEventListener("click", (e) => {
+    e.stopPropagation();
+    handleSwitch(1);
+  });
+
+  player2.addEventListener("click", (e) => {
+    e.stopPropagation();
+    handleSwitch(2);
+  });
+
+  // Prevent full-body tap from switching accidentally
+  document.body.addEventListener("click", (e) => {
+    if (!e.target.closest(".player")) return;
+  });
+
+  updateBars();
+</script>   
 </body>
 </html>
 
