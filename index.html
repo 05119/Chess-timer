@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Chess Timer - Jinku vs Bhargav</title>
   <style>
     * {
@@ -31,15 +31,14 @@
       justify-content: center;
       font-size: 2rem;
       color: #000;
-      transition: background-color 0.3s;
     }
 
     .jinku {
-      background-color: #F5F5DC; /* beige */
+      background-color: beige;
     }
 
     .bhargav {
-      background-color: #9DC183; /* Sage green */
+      background-color: #9DC183;
     }
 
     .timer-bar {
@@ -54,43 +53,81 @@
     .name {
       position: relative;
       z-index: 1;
+      text-align: center;
     }
 
     .active {
       border: 4px solid #333;
     }
+
+    .controls {
+      position: absolute;
+      top: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 10px;
+      z-index: 999;
+    }
+
+    .controls button, .controls input {
+      padding: 5px 10px;
+      font-size: 1rem;
+    }
   </style>
 </head>
 <body>
-  <div class="container">
+  <div class="controls">
+    <button onclick="startTimer()">Start</button>
+    <button onclick="resetTimer()">Reset</button>
+    <label>
+      Time (min):
+      <input type="number" id="timeInput" value="5" min="1" max="60" style="width: 60px;">
+    </label>
+  </div>
+
+  <div class="container" onclick="handleSwitch()">
     <div id="player1" class="player jinku active">
       <div class="timer-bar" id="bar1"></div>
-      <div class="name">Jinku</div>
+      <div class="name" id="label1">Jinku - <span id="time1Text"></span></div>
     </div>
     <div id="player2" class="player bhargav">
       <div class="timer-bar" id="bar2"></div>
-      <div class="name">Bhargav</div>
+      <div class="name" id="label2">Bhargav - <span id="time2Text"></span></div>
     </div>
   </div>
 
   <script>
-    const totalTime = 600; // seconds per player (e.g., 10 minutes)
+    let totalTime = 600;
     let time1 = totalTime;
     let time2 = totalTime;
     let activePlayer = 1;
     let interval;
+    let isRunning = false;
 
-    const player1 = document.getElementById("player1");
-    const player2 = document.getElementById("player2");
     const bar1 = document.getElementById("bar1");
     const bar2 = document.getElementById("bar2");
+    const player1 = document.getElementById("player1");
+    const player2 = document.getElementById("player2");
+    const time1Text = document.getElementById("time1Text");
+    const time2Text = document.getElementById("time2Text");
+    const timeInput = document.getElementById("timeInput");
+
+    function formatTime(seconds) {
+      const m = Math.floor(seconds / 60);
+      const s = seconds % 60;
+      return `${m}:${s.toString().padStart(2, '0')}`;
+    }
 
     function updateBars() {
       bar1.style.width = `${(time1 / totalTime) * 100}%`;
       bar2.style.width = `${(time2 / totalTime) * 100}%`;
+      time1Text.textContent = formatTime(time1);
+      time2Text.textContent = formatTime(time2);
     }
 
-    function switchPlayer() {
+    function handleSwitch() {
+      if (!isRunning) return;
       if (activePlayer === 1) {
         activePlayer = 2;
         player1.classList.remove("active");
@@ -104,31 +141,48 @@
 
     function startTimer() {
       if (interval) return;
+      isRunning = true;
       interval = setInterval(() => {
         if (activePlayer === 1) {
           if (time1 > 0) time1--;
         } else {
           if (time2 > 0) time2--;
         }
-
         updateBars();
 
         if (time1 === 0 || time2 === 0) {
           clearInterval(interval);
-          alert(`${time1 === 0 ? "Jinku" : "Bhargav"} is out of time!`);
+          interval = null;
+          isRunning = false;
+          const loser = time1 === 0 ? "Jinku" : "Bhargav";
+          alert(`Time's up ${loser}!`);
         }
       }, 1000);
     }
 
-    document.body.addEventListener("click", () => {
-      switchPlayer();
-      startTimer();
-    });
+    function resetTimer() {
+      clearInterval(interval);
+      interval = null;
+      isRunning = false;
+      totalTime = parseInt(timeInput.value || "5") * 60;
+      time1 = totalTime;
+      time2 = totalTime;
+      activePlayer = 1;
+      player1.classList.add("active");
+      player2.classList.remove("active");
+      updateBars();
+    }
 
-    updateBars(); // Initial rendering
+    updateBars();
   </script>
 </body>
 </html>
+
+   
+  
+
+   
+     
 
    
   
